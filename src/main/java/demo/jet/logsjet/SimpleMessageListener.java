@@ -33,14 +33,18 @@ public class SimpleMessageListener implements MessageListener<String> {
     log.info("Received message from: ".concat(message.getPublishingMember().toString()));
     log.info("Received message content: ".concat(message.getMessageObject()));
 
-    Path path = Paths.get("logs/".concat(message.getMessageObject()));
-    Pipeline p = Pipeline.create();
+    String[] split = message.getMessageObject().split(";");
 
-    byte[] bytes = Files.readAllBytes(path);
+    if (split.length == 2) {
+      Path path = Paths.get("logs/".concat(split[0]));
+      Pipeline p = Pipeline.create();
 
-    p.readFrom(TestSources.items(Arrays.asList(ArrayUtils.toObject(bytes))))
-        .writeTo(Sinks.list(FILE_LIST));
+      byte[] bytes = Files.readAllBytes(path);
 
-    jetService.newJob(p).join();
+      p.readFrom(TestSources.items(Arrays.asList(ArrayUtils.toObject(bytes))))
+          .writeTo(Sinks.list(FILE_LIST + split[1]));
+
+      jetService.newJob(p).join();
+    }
   }
 }
